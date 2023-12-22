@@ -36,10 +36,7 @@ class WelcomeScreen extends StatelessWidget {
                     const SizedBox(height: 10.0),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const QuestionScreen()),
-                        );
+                        Navigator.pushNamed(context, '/Quiz');
                       },
                       child: const Text('Start the Quiz'),
                     ),

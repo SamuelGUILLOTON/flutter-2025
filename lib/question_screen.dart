@@ -41,11 +41,11 @@ class _QuestionScreenState extends State<QuestionScreen> {
         selectedAnswer = 1;
       });
     } else {
-      Navigator.push(
+      Navigator.pushNamed(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              ScoreScreen(score: '$score/${questions.length}'), // Pass score here
+        "/Score",
+        arguments: ScoreScreenArguments(
+            '$score/${questions.length}',
         ),
       );
     }

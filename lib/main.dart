@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:quiz/question_screen.dart';
+import 'package:quiz/score_screen.dart';
 import 'package:quiz/welcome_screen.dart';
 
 void main() {
@@ -13,6 +14,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      initialRoute: "/Welcome",
+      routes: {
+        "/Welcome": (context) => const WelcomeScreen(),
+        "/Quiz": (context) => const QuestionScreen(),
+        "/Score": (context) => const ScoreScreen(),
+      },
       title: 'Quiz app',
       theme: ThemeData(
         // This is the theme of your application.
@@ -66,6 +73,7 @@ class _ContentScreenState extends State<ContentScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //

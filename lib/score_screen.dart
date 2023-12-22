@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:quiz/question_screen.dart';
 
-class ScoreScreen extends StatelessWidget {
+class ScoreScreenArguments {
   final String score;
+  ScoreScreenArguments(this.score);
+}
 
-  const ScoreScreen({super.key, required this.score});
+class ScoreScreen extends StatelessWidget {
+  const ScoreScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as ScoreScreenArguments;
     return Scaffold(
       body: Center(
         child: Padding(
@@ -32,7 +36,7 @@ class ScoreScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      score,
+                      args.score,
                       style: const TextStyle(
                         fontSize: 30.0,
                         color: Colors.white,
