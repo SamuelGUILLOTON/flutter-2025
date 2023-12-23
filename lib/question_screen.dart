@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:quiz/data.dart';
 import 'package:quiz/score_screen.dart';
-import 'package:quiz/network.dart';
-
+import 'package:quiz/network_and_db.dart';
 
 class QuestionScreen extends StatefulWidget {
   //final List<Question> questions;
 
   //const QuestionScreen({Key? key, required this.questions}) : super(key: key);
-  const QuestionScreen({Key? key}) : super(key: key);
+  const QuestionScreen({super.key});
 
   @override
   State<QuestionScreen> createState() => _QuestionScreenState();
@@ -21,7 +20,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
   @override
   void initState() {
     super.initState();
-    _quizFuture = fetchQuiz(); // Call fetchQuiz() in initState to fetch data
+    _quizFuture = fetchQuiz();// Call fetchQuiz() in initState to fetch data
   }
 
 
@@ -94,7 +93,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     children: snapshot.data![questionProgress].answers
                         .map(
                           (answer) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 2.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -111,10 +110,11 @@ class _QuestionScreenState extends State<QuestionScreen> {
                                 const SizedBox(
                                     width:
                                         8), // Adjust the spacing here if needed
-                                Text(
+                            Flexible(child :Text(
                                   answer.label,
                                   textAlign: TextAlign.center,
                                 ),
+                            ),
                               ],
                             ),
                           ),

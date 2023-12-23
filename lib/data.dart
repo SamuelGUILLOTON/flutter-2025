@@ -36,6 +36,24 @@ class Question {
       answers: answers,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'label': label,
+      'correctAnswerId': correctAnswerId,
+      'answers': answers.map((answer) => answer.toMap()).toList(),
+    };
+  }
+
+  factory Question.fromMap(Map<String, dynamic> map) {
+    return Question(
+      id: map['id'],
+      label: map['label'],
+      correctAnswerId: map['correctAnswerId'],
+      answers: [], // Initialize with an empty list since answers are added separately
+    );
+  }
 }
 
 class Answer {
@@ -51,6 +69,20 @@ class Answer {
     return Answer(
       id: json['id'],
       label: json['label'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'label': label
+    };
+  }
+
+  factory Answer.fromMap(Map<String, dynamic> map) {
+    return Answer(
+      id: map['id'],
+      label: map['label'],
     );
   }
 }
