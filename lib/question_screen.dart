@@ -1,142 +1,100 @@
 import 'package:flutter/material.dart';
-import 'package:quiz/data.dart';
-import 'package:quiz/score_screen.dart';
-import 'package:quiz/network_and_db.dart';
+import 'package:quiz/models/quiz_question.dart';
+import 'package:quiz/services/quiz_service.dart';
 
 class QuestionScreen extends StatefulWidget {
-  //final List<Question> questions;
-
-  //const QuestionScreen({Key? key, required this.questions}) : super(key: key);
-  const QuestionScreen({super.key});
+  const QuestionScreen({Key? key}) : super(key: key);
 
   @override
   State<QuestionScreen> createState() => _QuestionScreenState();
 }
 
 class _QuestionScreenState extends State<QuestionScreen> {
-
-  late Future<List<Question>> _quizFuture; // Declare a Future variable
+  final QuizService _quizService = QuizService();
+  List<QuizQuestion> _questions = [];
+  int _currentQuestionIndex = 0;
+  int _score = 0;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _quizFuture = fetchQuiz();// Call fetchQuiz() in initState to fetch data
+    _loadQuestions();
   }
 
+  Future<void> _loadQuestions() async {
+    final questions = await _quizService.loadQuestionsFromCSV();
+    setState(() {
+      _questions = questions;
+      _isLoading = false;
+    });
+  }
 
-  int questionProgress = 0;
-  int selectedAnswer = 1;
-  int score = 0;
-
-  void _nextOrDone(List<Question> questions) {
-    if (selectedAnswer == questions[questionProgress].correctAnswerId) {
+  void _answerQuestion(int selectedIndex) {
+    final isCorrect = selectedIndex == _questions[_currentQuestionIndex].correctAnswerIndex;
+    
+    if (isCorrect) {
       setState(() {
-        score++;
+        _score++;
       });
     }
-    if (questionProgress < questions.length - 1) {
+
+    if (_currentQuestionIndex < _questions.length - 1) {
       setState(() {
-        questionProgress++;
-        selectedAnswer = 1;
+        _currentQuestionIndex++;
       });
     } else {
-      Navigator.pushNamed(
-        context,
-        "/Score",
-        arguments: ScoreScreenArguments(
-            '$score/${questions.length}',
-        ),
+      // Passer le score à l'écran de résultat
+      Navigator.pushReplacementNamed(
+        context, 
+        '/Score',
+        arguments: {'score': _score, 'total': _questions.length},
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Question>>(
-      future: _quizFuture, // Call the fetchQuiz function here
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Colors.white,
-             body: Center(
-                  child: CircularProgressIndicator()
-              ),
-        );
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData) {
-          return const Center(child: Text('No data available'));
-        } else {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                    ),
-                    margin: const EdgeInsets.all(60.0),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Text(
-                        snapshot.data![questionProgress].label,
-                        style: const TextStyle(fontSize: 25.0),
-                        textAlign: TextAlign.center,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Quiz'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _questions.isEmpty
+              ? const Center(child: Text('Aucune question trouvée'))
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Question ${_currentQuestionIndex + 1}/${_questions.length}',
+                        style: const TextStyle(fontSize: 18),
                       ),
-                    ),
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: snapshot.data![questionProgress].answers
-                        .map(
-                          (answer) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 2.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Radio(
-                                  value: answer.id,
-                                  groupValue: selectedAnswer,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedAnswer = value as int;
-                                    });
-                                  },
+                      const SizedBox(height: 20),
+                      Text(
+                        _questions[_currentQuestionIndex].question,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      ..._questions[_currentQuestionIndex].options
+                          .asMap()
+                          .entries
+                          .map((entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: ElevatedButton(
+                                  onPressed: () => _answerQuestion(entry.key),
+                                  child: Text(entry.value),
                                 ),
-                                const SizedBox(
-                                    width:
-                                        8), // Adjust the spacing here if needed
-                            Flexible(child :Text(
-                                  answer.label,
-                                  textAlign: TextAlign.center,
-                                ),
-                            ),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
+                              ))
+                          .toList(),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {_nextOrDone(snapshot.data!);},
-              child: questionProgress < snapshot.data!.length - 1
-                  ? const Icon(Icons.arrow_forward)
-                  : const Icon(Icons.done),
-            ),
-            bottomNavigationBar: LinearProgressIndicator(
-              value: (questionProgress + 1) / snapshot.data!.length,
-              minHeight: 20.0,
-            ),
-          );
-        }
-      },
+                ),
     );
   }
 }
