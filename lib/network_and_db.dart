@@ -1,38 +1,28 @@
-import 'dart:convert';
-import 'package:flutter/cupertino.dart';
-import 'package:http/http.dart' as http;
+import 'package:quiz/services/quiz_service.dart';
 import 'package:quiz/data.dart';
-import 'package:quiz/quiz_database.dart';
-import 'package:quiz/quiz_shared_prefs.dart';
-
-import 'mock_generation.dart';
-
-
+import 'package:quiz/models/quiz_question.dart';
 
 Future<List<Question>> fetchQuiz() async {
-
-  WidgetsFlutterBinding.ensureInitialized();
-  DatabaseHelper dbHelper = DatabaseHelper();
-  await dbHelper.initDatabase();
-
-  var lastAPICall = await getLastAPICall();
-
-  if(lastAPICall ==0 && DateTime.now().millisecondsSinceEpoch - lastAPICall > 300000){
-
-    final response = await http.get(Uri.parse('https://raw.githubusercontent.com/worldline/learning-kotlin-multiplatform/main/quiz.json'));
-
-    if (response.statusCode == 200) {
-      // If the server returned a 200 OK response, parse the JSON
-      var questionsList = Quiz.fromJson(jsonDecode(response.body) as Map<String, dynamic>).questions;
-      dbHelper.insertQuestionsWithAnswers(questionsList);
-      storeLastAPICall(DateTime.now().millisecondsSinceEpoch);
-
-      return questionsList;
-    } else {
-      // If the server did not return a 200 OK response, throw an exception.
-      return await generateDummyQuestionsList();
-    }
-  }else {
-    return dbHelper.getQuestionsWithAnswers();
-  }
+  // Utiliser le service existant pour charger les questions du CSV
+  final quizService = QuizService();
+  final csvQuestions = await quizService.loadQuestionsFromCSV();
+  
+  // Convertir QuizQuestion en Question
+  final questions = csvQuestions.map((csvQuestion) {
+    final answers = csvQuestion.options.asMap().entries.map((entry) {
+      return Answer(
+        id: entry.key + 1, 
+        label: entry.value
+      );
+    }).toList();
+    
+    return Question(
+      id: 0, // Vous pouvez générer un ID si nécessaire
+      label: csvQuestion.question,
+      correctAnswerId: csvQuestion.correctAnswerIndex + 1, // +1 car vos index commencent à 1
+      answers: answers,
+    );
+  }).toList();
+  
+  return questions;
 }
